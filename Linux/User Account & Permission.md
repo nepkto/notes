@@ -1,13 +1,14 @@
 # Linux User Accounts and Permissions Guide
 
-**Contents:**
+**Jump to Section:**
 - [1. User Accounts](#1-user-accounts)
 - [2. Adding New Users](#2-adding-new-users)
-- [3. Password Management](#3-password-management)
-- [4. File Permissions](#4-file-permissions)
-- [5. Ownership & Apache Permissions](#5-ownership--apache-permissions)
-- [6. Listing Users and Groups](#6-listing-users-and-groups)
-- [7. Best Practices](#7-best-practices)
+- [3. Creating a Sudo User on Ubuntu](#3-creating-a-sudo-user-on-ubuntu)
+- [4. Password Management](#4-password-management)
+- [5. File Permissions](#5-file-permissions)
+- [6. Ownership & Apache Permissions](#6-ownership--apache-permissions)
+- [7. Listing Users and Groups](#7-listing-users-and-groups)
+- [8. Best Practices](#8-best-practices)
 
 ---
 
@@ -58,7 +59,26 @@ To allow a user to run commands with `sudo`, the user must be listed in `/etc/su
 
 ---
 
-## 3. Password Management
+## 3. Creating a Sudo User on Ubuntu
+
+1. **Add a New User Account:**
+    ```bash
+    sudo adduser example_user
+    ```
+2. **Add the User to the Sudo Group:**
+    ```bash
+    sudo usermod -aG sudo example_user
+    ```
+    > This gives the user the ability to run commands with sudo privileges.
+
+3. **Test (Switch to the new user):**
+    ```bash
+    su - example_user
+    ```
+
+---
+
+## 4. Password Management
 
 - **Change another user's password (as root):**
   ```bash
@@ -77,7 +97,7 @@ Passwords are stored encrypted in `/etc/shadow`. Account information is in `/etc
 
 ---
 
-## 4. File Permissions
+## 5. File Permissions
 
 Linux permissions use three categories:
 - Owner (u)
@@ -114,7 +134,7 @@ Linux permissions use three categories:
 
 ---
 
-## 5. Ownership & Apache Permissions
+## 6. Ownership & Apache Permissions
 
 - **Change ownership recursively:**
   ```bash
@@ -131,7 +151,7 @@ Linux permissions use three categories:
 
 ---
 
-## 6. Listing Users and Groups
+## 7. Listing Users and Groups
 
 ### Groups:
 - **Show groups for current user:**
@@ -154,7 +174,7 @@ Linux permissions use three categories:
 
 ---
 
-## 7. Best Practices
+## 8. Best Practices
 
 - Always use `visudo` when editing sudoers file to avoid syntax errors.
 - Use strong passwords and change them regularly.
