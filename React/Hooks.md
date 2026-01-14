@@ -239,4 +239,3 @@ function Page() {
 - You can now build complex, stateful, effectful components with just functions and custom hooks.
 - **Hooks were introduced in React version 16.8.**
 
-**Further questions? Try implementing a custom hook, or ask for more before-and-after examples!**
