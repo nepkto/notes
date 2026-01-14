@@ -124,5 +124,3 @@ function SignInForm() {
 
 **Summary:**  
 > **For production or medium+ apps, use `react-hook-form` or Formik with Yup/Zod for validation. These tools offer performance, flexibility, and accessibility, making them best-in-class for React front-end validation.**
-
-Let us know if you need a setup example or more specific guidance!
