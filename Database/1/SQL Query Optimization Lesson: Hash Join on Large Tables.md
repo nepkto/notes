@@ -574,8 +574,243 @@ ALTER DATABASE YourDB SET QUERY_STORE = ON
 - Index Strategy for Large Tables
 - Columnstore Indexes for Analytics
 
+
+# SQL Query Optimization - Quick Reference Guide
+
+## 🚀 The 5-Step Optimization Framework
+
+### 1. **PRE-FILTER** (Reduce Dataset First)
+```sql
+-- ❌ SLOW: Join first, filter later
+FROM huge_table (173M rows)
+INNER JOIN ...
+WHERE huge_table.date > @date
+
+-- ✅ FAST: Filter first, join small dataset
+FROM (
+    SELECT * FROM huge_table 
+    WHERE date > @date 
+    AND EXISTS (SELECT 1 FROM #relevant WHERE id = huge_table.id)
+) filtered (50K rows)
+INNER JOIN ...
+```
+**Impact**: 99.97% row reduction
+
 ---
 
-*Documented by: Performance Optimization Team*  
-*Date: February 16, 2026*  
-*Case Study: Position Deal Volume Query Optimization*
+### 2. **PRE-CALCULATE** (Compute Once)
+```sql
+-- ❌ SLOW: Calculate per join attempt
+COALESCE(a.val, b.val, c.val)  -- Runs millions of times
+
+-- ✅ FAST: Calculate once in temp table
+term_calc = COALESCE(a.val, b.val, c.val)  -- Runs once per row
+```
+**Impact**: 90% CPU reduction
+
+---
+
+### 3. **PRE-AGGREGATE** (Sum/Calculate Before Join)
+```sql
+-- ❌ SLOW: Sum 25 columns per join
+(hr1+hr2+hr3+...+hr25)
+
+-- ✅ FAST: Sum once, store result
+total_hours = (hr1+hr2+...+hr25)
+```
+**Impact**: 50%+ calculation time saved
+
+---
+
+### 4. **INDEX STRATEGICALLY** (Enable Index Seeks)
+```sql
+CREATE INDEX IX_temp ON #filtered_table (join_key, filter_col)
+INCLUDE (frequently_accessed_cols)
+```
+**Impact**: Table scan → Index seek (100x faster)
+
+---
+
+### 5. **REMOVE HINTS** (Trust Optimizer)
+```sql
+-- ❌ FORCES suboptimal strategy
+INNER HASH JOIN huge_table
+
+-- ✅ LETS optimizer choose best strategy
+INNER JOIN huge_table
+```
+**Impact**: Optimal join type selection (nested loop vs hash vs merge)
+
+---
+
+## 🎯 Join Type Decision Matrix
+
+| Scenario | Best Join | Reason |
+|----------|-----------|--------|
+| **Small dataset (<10K rows) + Indexes** | Nested Loop | Fast index seeks |
+| **Large sorted datasets** | Merge Join | Efficient when pre-sorted |
+| **Large unsorted datasets** | Hash Join | When nothing else works |
+| **After pre-filtering to <100K rows** | Nested Loop | Index seeks win |
+| **173M row table** | **DON'T FORCE!** | Let optimizer decide |
+
+---
+
+## ⚠️ When Hash Join Becomes Problematic
+
+### Memory Requirements
+```
+Hash Table Size = Row_Size × Row_Count × Hash_Overhead
+
+Example (173M rows):
+200 bytes × 173M × 1.5 = 52 GB memory!
+
+Result: Tempdb spills → Disk I/O → Slow!
+```
+
+### Red Flags
+- ⚠️ Memory grant warnings
+- ⚠️ Tempdb growth during query
+- ⚠️ Long execution time with high memory usage
+- ⚠️ `HASH MATCH` in execution plan on huge table
+
+---
+
+## 📊 Before/After Pattern
+
+### The Pattern
+```sql
+-- STEP 1: Build small filtered temp table
+DROP TABLE IF EXISTS #filtered
+SELECT col1, col2, pre_calculated_value
+INTO #filtered
+FROM huge_table
+WHERE filter_conditions
+  AND EXISTS (SELECT 1 FROM #relevant WHERE key = huge_table.key)
+
+-- STEP 2: Index it
+CREATE INDEX IX_filtered ON #filtered (key, date)
+
+-- STEP 3: Join small datasets (let optimizer choose join type)
+SELECT ...
+FROM #small_table
+INNER JOIN #filtered ON ...  -- No HASH JOIN hint!
+```
+
+### Expected Results
+- ✅ 70-90% faster execution
+- ✅ 99% less memory usage
+- ✅ No tempdb spills
+- ✅ Index seeks instead of scans
+
+---
+
+## 🔍 Quick Diagnostics
+
+### Find Slow Queries with Hash Joins
+```sql
+-- Check execution plan for hash joins on large tables
+SELECT TOP 10
+    qs.execution_count,
+    qs.total_elapsed_time / 1000000.0 AS total_elapsed_time_sec,
+    qs.total_worker_time / 1000000.0 AS total_cpu_time_sec,
+    SUBSTRING(qt.text, (qs.statement_start_offset/2)+1,
+        ((CASE qs.statement_end_offset
+            WHEN -1 THEN DATALENGTH(qt.text)
+            ELSE qs.statement_end_offset
+        END - qs.statement_start_offset)/2)+1) AS query_text,
+    qp.query_plan
+FROM sys.dm_exec_query_stats qs
+CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) qt
+CROSS APPLY sys.dm_exec_query_plan(qs.plan_handle) qp
+WHERE CAST(qp.query_plan AS NVARCHAR(MAX)) LIKE '%<RelOp NodeId%PhysicalOp="Hash Match"%'
+ORDER BY qs.total_elapsed_time DESC
+```
+
+### Check Memory Grants
+```sql
+SELECT 
+    granted_memory_kb / 1024 AS granted_memory_mb,
+    used_memory_kb / 1024 AS used_memory_mb,
+    text,
+    query_plan
+FROM sys.dm_exec_query_memory_grants qmg
+CROSS APPLY sys.dm_exec_sql_text(qmg.sql_handle)
+CROSS APPLY sys.dm_exec_query_plan(qmg.plan_handle)
+WHERE granted_memory_kb > 1024000  -- > 1 GB
+ORDER BY granted_memory_kb DESC
+```
+
+---
+
+## 💡 Optimization Checklist
+
+### Analysis Phase
+- [ ] Run execution plan (Ctrl+M in SSMS)
+- [ ] Identify table scans on large tables
+- [ ] Find hash joins with warnings
+- [ ] Check memory grant size
+- [ ] Look for tempdb spills
+- [ ] Note forced join hints
+
+### Optimization Phase
+- [ ] Apply WHERE filters before joins
+- [ ] Use EXISTS to pre-filter large tables
+- [ ] Move calculations to temp tables
+- [ ] Create indexes on temp tables
+- [ ] Remove join hints (HASH, LOOP, MERGE)
+- [ ] Update statistics on large tables
+
+### Validation Phase
+- [ ] Compare execution times
+- [ ] Verify same row counts
+- [ ] Check memory grant (should be < 100 MB)
+- [ ] Confirm no tempdb spills
+- [ ] Review new execution plan
+- [ ] Validate results match
+
+---
+
+## 🎓 Golden Rules
+
+1. **Filter Early**: Reduce dataset before joining
+2. **Index Everything**: Temp tables need indexes too
+3. **Calculate Once**: Pre-compute expensive operations
+4. **Trust Optimizer**: Remove hints after pre-filtering
+5. **Measure Always**: Before and after metrics
+
+---
+
+## 📈 Success Metrics
+
+| Metric | Target |
+|--------|--------|
+| **Execution Time** | < 2 minutes |
+| **Memory Grant** | < 100 MB |
+| **Tempdb Usage** | Minimal |
+| **Row Reduction** | > 90% before join |
+| **Index Seeks** | > 95% of operations |
+
+---
+
+## 🚨 Anti-Patterns to Avoid
+
+```sql
+-- ❌ NEVER do these:
+INNER HASH JOIN huge_table                    -- Forces suboptimal join
+WHERE COALESCE(a, b, c) = value              -- Non-sargable
+WHERE YEAR(date_col) = 2026                  -- Prevents index usage
+SELECT * FROM huge_table WHERE ...           -- Select only needed columns
+FROM huge_table a, huge_table b WHERE ...    -- Old-style join syntax
+```
+
+---
+
+## 📚 Additional Resources
+
+- **Execution Plans**: [SQL Server Central - Reading Execution Plans](https://www.sqlservercentral.com)
+- **Index Strategy**: [Brent Ozar - Index Tuning](https://www.brentozar.com)
+- **Join Internals**: [Microsoft Docs - Join Fundamentals](https://docs.microsoft.com)
+
+---
+
+
