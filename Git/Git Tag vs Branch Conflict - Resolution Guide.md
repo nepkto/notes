@@ -146,9 +146,3 @@ git fetch origin refs/tags/dev/v2.3.04-hotfix
 # ✅ CORRECT: View tag
 git show refs/tags/dev/v2.3.04-hotfix
 ```
-
----
-
-**Date Created**: March 17, 2026  
-**Repository**: trmtracker  
-**Project**: FARRMS/CTRM
