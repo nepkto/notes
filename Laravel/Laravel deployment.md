@@ -876,4 +876,60 @@ sudo supervisorctl restart laravel-worker:*
 
 ---
 
-*Last updated: 2026-04-19*
+#!/usr/bin/env bash
+set -e
+
+# Usage: deploy.sh <branch>   (defaults to main)
+BRANCH="${1:-main}"
+
+# Environment-specific paths (override in server-specific copy if needed)
+APP_ROOT="$(dirname "$(readlink -f "$0")")"          # e.g., /var/www/example.com
+APP_DIR="$APP_ROOT/current"
+RELEASES_DIR="$APP_ROOT/releases"
+SHARED_DIR="$APP_ROOT/shared"
+REPO_URL="https://github.com/your-org/your-laravel-app.git"
+KEEP_RELEASES=5
+
+TIMESTAMP=$(date +%Y%m%d%H%M%S)
+NEW_RELEASE="$RELEASES_DIR/$TIMESTAMP"
+
+mkdir -p "$RELEASES_DIR" "$SHARED_DIR/storage"
+
+echo "➤ Deploying branch '$BRANCH' to $APP_ROOT"
+
+echo "➤ Cloning repo..."
+git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$NEW_RELEASE"
+
+echo "➤ Linking shared .env and storage..."
+ln -sfn "$SHARED_DIR/.env" "$NEW_RELEASE/.env"
+rm -rf "$NEW_RELEASE/storage"
+ln -sfn "$SHARED_DIR/storage" "$NEW_RELEASE/storage"
+
+echo "➤ Installing dependencies..."
+cd "$NEW_RELEASE"
+composer install --no-dev --optimize-autoloader --no-interaction
+npm ci
+npm run build
+
+echo "➤ Running migrations & cache..."
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan event:cache
+
+echo "➤ Switching symlink..."
+ln -sfn "$NEW_RELEASE" "$APP_DIR"
+
+echo "➤ Reloading PHP-FPM..."
+sudo systemctl reload php8.1-fpm
+
+echo "➤ Gracefully restarting queue workers..."
+php artisan queue:restart
+sudo supervisorctl restart laravel-worker:* || true
+
+echo "➤ Cleaning old releases..."
+cd "$RELEASES_DIR"
+ls -1dt */ | tail -n +$((KEEP_RELEASES + 1)) | xargs -r rm -rf
+
+echo "✅ Deployment complete: branch=$BRANCH release=$TIMESTAMP"
