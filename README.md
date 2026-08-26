@@ -25,7 +25,7 @@ This repository serves as an operational reference containing advanced notes, de
 
 ### 🌍 1. System Design & Architectural Blueprints
 High-level system strategies focused on extreme scaling, fault isolation, and enterprise SaaS paradigms.
-*   **[Staff / Principal Engineer Level Architecture Guide](./CI-CD/Staff%20_Principal%20Engineer%20Level%20Architecture%20Guide)**
+*   **[Staff / Principal Engineer Level Architecture Guide](./CI-CD/Architecture/Staff%20and%20Principal%20Engineer%20Architecture%20Guide.md)**
     *   *Highlights:* Multi-region configurations, Queue-based scaling, Zero-Trust network topologies, mTLS, Deep Observability paradigms, and Chaos Engineering.
 *   **[Multitenant SaaS Architecture: Per-Country DB Approach](./Multitenant%20SaaS%20Architecture_%20Per-Country%20Database%20Approach.md)**
     *   *Highlights:* Strategy for multi-region SaaS solutions with strict, isolated database architectures per country using Laravel/React stacks.
@@ -36,24 +36,37 @@ High-level system strategies focused on extreme scaling, fault isolation, and en
 
 ### 🛡️ 2. Enterprise DevOps & CI/CD Pipelines
 Hardened CI/CD blueprints, configuration standards, and deployment runbooks.
-*   **[CD Pipeline via GitHub Actions & SSH Deployment](./CI-CD/Laravel%20CI/CD%20Pipeline%20via%20GitHub%20Actions%20%26%20SSH%20Deployment.md)**
+*   **[CI/CD Pipeline via GitHub Actions & SSH Deployment](./CI-CD/GitHub%20Actions/Laravel%20CI-CD%20Pipeline%20via%20GitHub%20Actions%20and%20SSH.md)**
     *   *Highlights:* Real-world deployment automations, SSH configuration, key rotations, and fallback script automation.
-*   **[Enterprise Architecture & Production Blueprint](./CI-CD/Laravel%20CI/Enterprise%20Architecture%20%26%20Production%20Blueprint.md)**
+*   **[Enterprise Architecture & Production Blueprint](./CI-CD/Architecture/Enterprise%20Architecture%20and%20Production%20Blueprint.md)**
     *   *Highlights:* Comprehensive production deployment structures under enterprise-grade operational standards.
-*   **[Advanced Production Scenarios, Security & Performance](./CI-CD/Laravel%20CI/Advanced%20Production%20Scenarios%2C%20Security%20%26%20Performance%20Guide.md)**
+*   **[Advanced Production Scenarios, Security & Performance](./CI-CD/Production/Advanced%20Production%20Scenarios%20Security%20and%20Performance%20Guide.md)**
     *   *Highlights:* Web application firewalls (WAF), caching policies, performance tuning, and access control.
-*   **[Enterprise DevOps Extension Guide](./CI-CD/Laravel%20CI/Enterprise%20DevOps%20Extension%20Guide.md)**
+*   **[Enterprise DevOps Extension Guide](./CI-CD/Architecture/Enterprise%20DevOps%20Extension%20Guide.md)**
     *   *Highlights:* Expanding deployment operations for multi-stage pipelines and orchestration metrics.
+*   **[CI/CD Workers: Runners vs. Agents](./CI-CD/Workers/Runners%20vs.%20Agents.md)**
+    *   *Highlights:* Comparing GitHub/GitLab runners with Azure DevOps/Jenkins agents and workload routing.
 
-### 🗄️ 3. Database Engineering & Reliability (ACID)
+### 🐳 3. Containers & Docker
+Practical container setup, SQL Server development environments, and Docker diagnostics.
+*   **[SQL Server 2022 with Docker](./Docker/Guides/SQL%20Server%202022%20with%20Docker.md)**
+    *   *Highlights:* WSL setup, Docker Engine, Compose configuration, SQL Server containers, and troubleshooting.
+*   **[Docker Debugging Cheat Sheet](./Docker/Reference/Docker%20Debugging%20Cheat%20Sheet.md)**
+    *   *Highlights:* Container, image, volume, network, Compose, PHP, Laravel, and Redis diagnostics.
+
+### 🗄️ 4. Database Engineering & Reliability (ACID)
 Strict database transactions, reliable data modeling, and high-concurrency booking schemas.
 *   **[ACID Compliance in Laravel with MSSQL](./ACID/ACID%20Compliance%20in%20Laravel%20with%20MSSQL.md)**
     *   *Highlights:* Database transactional isolation levels, row versioning lockouts, and multi-statement safety.
 *   **[ACID-Compliant Ticket Booking in MySQL](./ACID/ACID-Compliant%20Ticket%20Booking%20in%20MySQL.md) & [MSSQL](./ACID/ACID-Compliant%20Ticket%20Booking%20in%20MSSQL.md)**
     *   *Highlights:* High-concurrency booking designs with database level row-locking strategies (`SELECT ... FOR UPDATE`/`atomic operations`) to avoid double bookings.
 
-### ☁️ 4. Cloud Infrastructure, CDN & SSL/TLS Setup
+### ☁️ 5. Cloud Infrastructure, CDN & SSL/TLS Setup
 Resilient modern ingress architecture, continuous SSL management, and reverse proxies.
+*   **[Azure vs AWS Hosting Services Comparison](./Cloud%20Computing/Cloud%20Platforms/Azure%20vs%20AWS%20Hosting%20Services%20Comparison.md)**
+    *   *Highlights:* Workload-oriented mappings between Azure and AWS hosting services across PaaS, serverless, containers, and IaaS.
+*   **[Azure Container Registry (ACR)](./Cloud%20Computing/Azure/Azure%20Container%20Registry%20%28ACR%29.md)**
+    *   *Highlights:* Azure CLI, Bicep, portal deployment, SKU selection, and registry authentication.
 *   **[Production Setup Guide: Laravel/Node/Next.js + Caddy + Cloudflare](./Cloudfare/Production%20Setup%20Guide_%20Laravel_Node_Next.js%20%2B%20Caddy%20%2B%20Cloudflare.md)**
     *   *Highlights:* Combining modern frontends and backends with SSL termination, Caddy proxies, and Cloudflare speed/protection profiles.
 *   **[Caddy Server Integration](./Cloudfare/Caddy%20Server%20Integration%20%28Modern%20Setup%29.md)**
@@ -61,7 +74,7 @@ Resilient modern ingress architecture, continuous SSL management, and reverse pr
 *   **[Cloudflare + SSL Troubleshooting](./Cloudfare/Cloudflare%20%2B%20SSL%20Troubleshooting%20Guide.md) & [Customer SSL Playbook](./Cloudfare/Customer%20Handling%20Playbook%20%28SSL%20Issues%29.md)**
     *   *Highlights:* Step-by-step diagnostic workflows for SSL handshake errors, proxy loops, edge-case certificate routing (e.g., custom domains), and user-facing runbooks.
 
-### 🐍 5. Modern Paradigms & Architecture Roadmaps
+### 🐍 6. Modern Paradigms & Architecture Roadmaps
 *   **[AI with Python: Roadmap for Experienced Developers](./AI%20with%20Python%20—%20Roadmap%20for%20an%20Experienced%20Developer.md)**
     *   *Highlights:* Fast-tracked framework path of LLM integrations, PyTorch basics, preprocessing vectors, and Agentic workflows.
 *   **.NET Source Generators:** **[Runtime-compiled vs Source-generated Regex (`GeneratedRegex`)](./.Net/Runtime-compiled%20Regex%20vs%20Source-generated%20Regex%20%28%60GeneratedRegex%60%29.md)**
